@@ -1,0 +1,42 @@
+name: Bug report
+description: Report a reproducible studio, rule or player problem.
+title: '[Bug]: '
+body:
+  - type: markdown
+    attributes:
+      value: 'Use a minimal project and synthetic marker image where possible. Do not attach private camera footage. Follow SECURITY.md for vulnerabilities.'
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Expected and actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps and minimal project
+      description: Include the stage rule and card action that reproduce the problem.
+    validations:
+      required: true
+  - type: dropdown
+    id: input
+    attributes:
+      label: Input path
+      options:
+        - Simulator
+        - Physical camera
+        - Synthetic marker frame
+        - Import / print / export
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Browser, operating system and source commit
+    validations:
+      required: true
+  - type: textarea
+    id: conditions
+    attributes:
+      label: Physical conditions, if relevant
+      description: Describe card size, distance, focus and lighting without posting private footage.

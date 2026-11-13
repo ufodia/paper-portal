@@ -1,0 +1,21 @@
+name: Feature request
+description: Explain an activity or authoring problem and a focused improvement.
+title: '[Idea]: '
+body:
+  - type: textarea
+    id: activity
+    attributes:
+      label: What are you trying to create?
+      description: Describe the physical action and intended player experience.
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Proposed behavior
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Current workaround and trade-offs
