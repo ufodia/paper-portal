@@ -8,7 +8,7 @@ Only the current main source is maintained at this stage. There is no promised r
 
 ## Report privately
 
-If private vulnerability reporting is enabled, use [Report a vulnerability](https://github.com/ufodia/paper-portal/security/advisories/new). Do not publish exploit details or private camera data in an issue.
+Use [Report a vulnerability](https://github.com/ufodia/paper-portal/security/advisories/new). Private vulnerability reporting is enabled for this repository. Do not publish exploit details or private camera data in an issue.
 
 If that private channel is unavailable, ask the maintainer for a private reporting route without posting sensitive details. Include the affected commit, reproduction steps, impact and a minimal synthetic project through the private route.
 

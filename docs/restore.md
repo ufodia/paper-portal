@@ -21,6 +21,8 @@ Record the full source SHA when reproducing an exact version. Open the local add
 
 ## Generated player runtime
 
+For the static hosted studio, see [deployment](deployment.md).
+
 The generated runtime is intentionally ignored by Git. The tracked player source and build script recreate it during the normal dev/build workflow. Its absence immediately after cloning is expected; do not copy an old generated runtime from an unrelated checkout.
 
 Use the committed dependency lockfile. If an export build fails, rerun dependency installation and the normal build, then inspect the actual error rather than downloading a detector script from an arbitrary CDN.

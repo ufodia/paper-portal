@@ -13,6 +13,8 @@
 
 ![Paper Portal studio with printable cards, authored stages and an interactive scene](docs/assets/workspace.png)
 
+[Open the app](https://paper-portal-three.vercel.app/)
+
 ## Build a puzzle that reaches off the screen
 
 Put a card on the table to wake a console. Arrange a sequence to unlock a gate. Turn a printed key to open the portal. Paper Portal connects those physical actions to a small authored story without custom electronics, a cloud account or a programming language.
