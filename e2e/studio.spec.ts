@@ -76,3 +76,41 @@ test('invalid imported projects produce a useful error and preserve the current 
   await expect(page.getByLabel('Project name', { exact: true })).toHaveValue(before);
   await expect(page.getByRole('button', { name: 'Download game', exact: true })).toBeEnabled();
 });
+
+test('keyboard rule edits keep focus, modal close returns focus, and narrow layouts reflow', async ({
+  page,
+}) => {
+  await page.goto('/');
+  const status = await page.getByRole('status').elementHandle();
+  const rule = page.locator('#rule-kind');
+  await rule.focus();
+  await page.keyboard.press('ArrowDown');
+  await expect(rule).toHaveValue('hidden');
+  await expect(rule).toBeFocused();
+  expect(await status!.evaluate((element) => element.isConnected)).toBe(true);
+  await page.getByRole('button', { name: 'Play puzzle', exact: true }).focus();
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('button', { name: 'Play puzzle', exact: true })).toBeFocused();
+  await page.setViewportSize({ width: 320, height: 900 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await expect(page.getByRole('img', { name: 'ArUco marker 0', exact: true })).toBeVisible();
+});
+
+test('backward keyboard navigation reaches the unkeyed support link after a name edit', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.locator('#project-name').focus();
+  await page.keyboard.press('Control+A');
+  await page.keyboard.type('Backward keyboard edit');
+  await page.keyboard.press('Shift+Tab');
+  await expect(page.locator('.support-button')).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(page.locator('#project-name')).toBeFocused();
+  // Native scope exits stay native instead of restoring a stale control.
+  await page.locator('.brand').focus();
+  await page.keyboard.press('Shift+Tab');
+  await expect(page.locator('.brand')).not.toBeFocused();
+});

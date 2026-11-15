@@ -11,6 +11,12 @@ type Scene = Stage['scene'];
 
 const root = document.querySelector<HTMLDivElement>('#app');
 if (!root) throw new Error('Paper Portal application root is missing.');
+const liveStatus = document.createElement('p');
+liveStatus.className = 'studio-announcements';
+liveStatus.setAttribute('role', 'status');
+liveStatus.setAttribute('aria-live', 'polite');
+liveStatus.setAttribute('aria-atomic', 'true');
+root!.insertAdjacentElement('afterend', liveStatus);
 let project: Project = sampleProject();
 let selectedStageId = project.stages[0]!.id;
 let status = 'The Observatory is ready to explore. Edit the story, print the cards, then play.';
@@ -63,6 +69,7 @@ function selectedStage(): Stage {
 function tell(message: string, kind: typeof statusKind = 'info'): void {
   status = message;
   statusKind = kind;
+  liveStatus.textContent = message;
 }
 function cardLabel(id: number): string {
   return project.cards.find((card) => card.id === id)?.label || `Card ${id}`;
@@ -153,20 +160,114 @@ function ruleEditor(rule: Rule): string {
   return `<div class="stacked-fields"><label>Card to rotate<select data-rule-field="rotation-id" aria-label="Rotated card">${cardOptions(rule.id)}</select></label><label>Required angle<select data-rule-field="quarter-turn" aria-label="Required card rotation">${[0, 90, 180, 270].map((angle) => `<option value="${angle}" ${rule.quarterTurn === angle ? 'selected' : ''}>${angle}°${angle === 0 ? ' · upright' : ''}</option>`).join('')}</select></label></div><p class="field-hint">Use the printed card’s upright direction as the reference. Quarter turns are clockwise as the camera sees the printed card.</p>`;
 }
 
+// Keep the keyboard user's place when the studio replaces its controls.
+const focusAttributes = [
+  'data-action',
+  'data-id',
+  'data-index',
+  'data-field',
+  'data-project-field',
+  'data-stage-field',
+  'data-rule-field',
+  'data-rule-card',
+  'data-card-field',
+  'data-card-id',
+];
+type FocusTarget = { selector: string; index: number };
+function focusTarget(element: Element | null): FocusTarget | null {
+  if (!element || !root!.contains(element)) return null;
+  const attributes = focusAttributes.filter((name) => element.hasAttribute(name));
+  const selector = element.id
+    ? `#${CSS.escape(element.id)}`
+    : element.matches('a[href]')
+      ? `a[href="${CSS.escape(element.getAttribute('href')!)}"]`
+      : attributes.length
+        ? element.tagName.toLowerCase() +
+          attributes
+            .map((name) => `[${name}="${CSS.escape(element.getAttribute(name)!)}"]`)
+            .join('')
+        : element.tagName.toLowerCase();
+  return { selector, index: Array.from(root!.querySelectorAll(selector)).indexOf(element) };
+}
+// A Tab with no destination leaves this scope; it must not restore the old field.
+let tabIntent: { destination: FocusTarget | null } | null = null;
+let deferredFocus: FocusTarget | null = null;
+root!.addEventListener('keydown', (event) => {
+  if (event.key !== 'Tab') return;
+  const scope = (event.target as Element).closest('dialog[open]') ?? root!;
+  const controls = Array.from(
+    scope.querySelectorAll<HTMLElement>(
+      'a[href],button:not(:disabled),input:not(:disabled):not([type="hidden"]),select:not(:disabled),textarea:not(:disabled),summary,[tabindex="0"]',
+    ),
+  ).filter((element) => element.tabIndex >= 0 && element.getClientRects().length > 0);
+  const index = controls.indexOf(document.activeElement as HTMLElement);
+  tabIntent = { destination: focusTarget(controls[index + (event.shiftKey ? -1 : 1)] ?? null) };
+  setTimeout(() => {
+    tabIntent = null;
+  }, 0);
+});
+function retainFocus(): () => void {
+  const active = document.activeElement;
+  const tabbing = tabIntent !== null;
+  const target = tabbing
+    ? tabIntent!.destination
+    : (focusTarget(active) ?? (active === document.body ? deferredFocus : null));
+  const start =
+    active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement
+      ? active.selectionStart
+      : null;
+  const end =
+    active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement
+      ? active.selectionEnd
+      : null;
+  return () => {
+    if (tabbing && !target) {
+      deferredFocus = null;
+      return;
+    }
+    const restore = () => {
+      const replacement = target
+        ? root!.querySelectorAll<HTMLElement>(target.selector)[target.index]
+        : null;
+      if (
+        !replacement ||
+        replacement.matches(':disabled') ||
+        !replacement.getClientRects().length
+      ) {
+        deferredFocus = target;
+        return;
+      }
+      deferredFocus = null;
+      replacement.focus({ preventScroll: true });
+      if (
+        !tabbing &&
+        start !== null &&
+        end !== null &&
+        (replacement instanceof HTMLInputElement || replacement instanceof HTMLTextAreaElement)
+      )
+        replacement.setSelectionRange(start, end);
+    };
+    if (tabbing) setTimeout(restore, 0);
+    else restore();
+  };
+}
+
 function render(): void {
+  const restoreFocus = retainFocus();
   const stage = selectedStage();
   const index = project.stages.indexOf(stage);
   root!.innerHTML = `<header class="site-header"><a class="brand" href="./" aria-label="paperportal home"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span><span>paper<span>portal</span><sup aria-hidden="true">↗</sup></span></a><span class="header-caption">STORIES YOU CAN TOUCH.</span><nav class="header-actions" aria-label="Project actions"><button class="button quiet" data-action="sample">Load sample</button><button class="button quiet" data-action="open">${icon('upload')} Open project</button><button class="button outline" data-action="save">${icon('save')} Save project</button><a class="support-button" href="https://buymeacoffee.com/ufodia" target="_blank" rel="noopener noreferrer" aria-label="Fuel the magic — Support ufodia on Buy Me a Coffee">${icon('coffee')}<span>Fuel the magic</span></a></nav></header>
   <main><section class="intro"><div><p class="eyebrow"><span class="tiny-star">✦</span> THE PHYSICAL PUZZLE STUDIO</p><h1>Make the table<br><span>part of the story.</span></h1><p>Build a puzzle from paper cards, a camera and a little imagination.</p></div><div class="intro-note"><span>01 / CREATE</span><span>02 / PRINT</span><span>03 / PLAY</span><p>Small pieces of paper.<br>A whole other world.</p></div></section>
   <section class="project-strip" aria-label="Project settings"><div class="project-name"><label for="project-name">YOUR STORY</label><input id="project-name" data-project-field="name" value="${h(project.name)}" maxlength="120" aria-label="Project name"></div><div class="project-description"><label for="project-description">THE SETUP</label><input id="project-description" data-project-field="description" value="${h(project.description)}" maxlength="800" aria-label="Project description"></div><div class="hold-setting"><label for="hold-ms">HOLD TO CONFIRM</label><div><input id="hold-ms" data-project-field="holdMs" type="number" min="200" max="3000" step="50" value="${project.holdMs}" aria-label="Hold duration in milliseconds"><span>ms</span></div></div></section>
-  <div class="status-note ${statusKind}" role="status" aria-live="polite"><i></i><span>${h(status)}</span><span class="local-pill">LOCAL FILES · NO ACCOUNTS</span></div>
+  <div class="status-note ${statusKind}"><i></i><span>${h(status)}</span><span class="local-pill">LOCAL FILES · NO ACCOUNTS</span></div>
   <div class="studio-layout"><aside class="story-panel panel"><div class="panel-heading"><div><p class="eyebrow">01 / THE JOURNEY</p><h2>Story beats</h2></div><span class="count-pill">${project.stages.length} / 8</span></div><p class="panel-description">Each beat unlocks the next.</p><ol class="stage-list">${project.stages.map((item, itemIndex) => `<li class="stage-item ${item.id === stage.id ? 'selected' : ''}"><button class="stage-select" data-action="select-stage" data-id="${h(item.id)}" aria-current="${item.id === stage.id ? 'step' : 'false'}"><span class="sr-only">Edit stage </span><span class="stage-number">${String(itemIndex + 1).padStart(2, '0')}</span><span><strong>${h(item.title)}</strong><small>${h(item.rule.kind)} · ${h(item.scene)}</small></span><span class="stage-dot"></span></button><div class="stage-row-actions"><button class="icon-button" data-action="stage-up" data-id="${h(item.id)}" aria-label="Move stage ${itemIndex + 1} up" ${itemIndex === 0 ? 'disabled' : ''}>${icon('up')}</button><button class="icon-button" data-action="stage-down" data-id="${h(item.id)}" aria-label="Move stage ${itemIndex + 1} down" ${itemIndex === project.stages.length - 1 ? 'disabled' : ''}>${icon('down')}</button><button class="icon-button remove-button" data-action="remove-stage" data-id="${h(item.id)}" aria-label="Remove stage ${itemIndex + 1}" ${project.stages.length === 1 ? 'disabled' : ''}>${icon('close')}</button></div></li>`).join('')}</ol><button class="add-button" data-action="add-stage" ${project.stages.length >= 8 ? 'disabled' : ''}>${icon('plus')} Add a story beat</button><div class="journey-footnote">${icon('cards')}<p>Players solve one beat at a time. Keep the first one simple.</p></div></aside>
   <section class="preview-panel panel" aria-label="Scene preview"><div class="preview-heading"><span class="eyebrow">02 / THE WORLD</span><span class="preview-badge">${icon('eye')} EDITOR PREVIEW</span></div><div class="preview-story" data-testid="stage-preview"><div class="story-copy"><span class="chapter-label">CHAPTER ${String(index + 1).padStart(2, '0')} / ${String(project.stages.length).padStart(2, '0')}</span><h2>${h(stage.title)}</h2><p>${h(stage.instruction)}</p></div>${sceneArt(stage.scene)}<div class="scene-floor"><span class="scene-floor-dot"></span><span>A little paper can open a very big door.</span><span class="scene-floor-dot"></span></div></div><div class="rule-preview"><span class="rule-symbol">${icon('sparkle')}</span><div><span class="field-label">THE UNLOCK</span><p>${h(ruleDescription(stage.rule))}</p><span class="rule-hold">Hold the condition for ${(project.holdMs / 1000).toFixed(1)} seconds.</span></div></div><div class="success-preview"><span>THEN</span><p>“${h(stage.successText)}”</p></div><div class="play-actions"><button class="button primary" data-action="play">${icon('play')} Play puzzle</button><button class="button outline" data-action="download">${icon('download')} Download game</button></div><p class="preview-footnote">This illustration previews the scene. Open the player to use its camera and practice controls.</p></section>
   <section class="inspector-panel panel" aria-label="Selected stage settings"><div class="panel-heading"><div><p class="eyebrow">03 / THE RULES</p><h2>Shape the moment</h2></div><span class="selected-index">${String(index + 1).padStart(2, '0')}</span></div><div class="stacked-fields"><label>Stage title<input aria-label="Stage title" data-stage-field="title" value="${h(stage.title)}" maxlength="80"></label><label>Player instruction<textarea aria-label="Player instruction" data-stage-field="instruction" maxlength="500" rows="3">${h(stage.instruction)}</textarea></label><label>Success message<textarea aria-label="Success message" data-stage-field="successText" maxlength="200" rows="2">${h(stage.successText)}</textarea></label><label>Scene<select aria-label="Scene" data-stage-field="scene">${(['night', 'console', 'gate', 'portal'] as Scene[]).map((scene) => `<option value="${scene}" ${scene === stage.scene ? 'selected' : ''}>${scene === 'night' ? 'Night observatory' : scene === 'console' ? 'Signal console' : scene === 'gate' ? 'Sealed gate' : 'Open portal'}</option>`).join('')}</select></label></div><div class="rule-section"><label class="rule-type-label">Unlock condition<select aria-label="Unlock condition" id="rule-kind"><option value="visible" ${stage.rule.kind === 'visible' ? 'selected' : ''}>Show cards together</option><option value="hidden" ${stage.rule.kind === 'hidden' ? 'selected' : ''}>Hide one, keep a witness</option><option value="order" ${stage.rule.kind === 'order' ? 'selected' : ''}>Arrange left to right</option><option value="rotation" ${stage.rule.kind === 'rotation' ? 'selected' : ''}>Rotate a card</option></select></label>${ruleEditor(stage.rule)}</div></section></div>
-  <section class="deck-panel panel"><div class="deck-header"><div><p class="eyebrow">04 / SOMETHING TO HOLD</p><h2>Your paper keys</h2><p>These are real ArUco markers. Print them clearly and keep their borders intact.</p></div><div><button class="button quiet" data-action="add-card" ${project.cards.length >= 8 ? 'disabled' : ''}>${icon('plus')} Add card</button><button class="button outline" data-action="print">${icon('print')} Print cards</button></div></div><div class="card-deck" data-testid="card-deck">${project.cards.map((card, cardIndex) => `<article class="paper-card" style="--card-color:${h(card.color)}"><div class="card-top"><label class="card-color" title="Card color"><input type="color" aria-label="Card ${card.id} color" data-card-id="${card.id}" data-card-field="color" value="${h(card.color)}"></label><span>CARD ${String(card.id).padStart(2, '0')}</span><button class="icon-button remove-button" data-action="remove-card" data-id="${card.id}" aria-label="Remove card ${h(card.label)}" ${project.cards.length <= 3 ? 'disabled' : ''}>${icon('close')}</button></div><div class="printed-marker" aria-label="ArUco marker ${card.id}">${markerSvg(card.id)}</div><label class="sr-only" for="card-label-${card.id}">Card ${card.id} label</label><input id="card-label-${card.id}" aria-label="Card ${card.id} label" data-card-id="${card.id}" data-card-field="label" value="${h(card.label)}" maxlength="32"><div class="card-bottom"><span>↑ THIS WAY UP</span><span>KEY ${String(cardIndex + 1).padStart(2, '0')}</span></div></article>`).join('')}</div><div class="deck-notes"><span>${icon('print')} Start with the print sheet’s size guide.</span><span>${icon('eye')} Bright, even light helps the camera see the cards.</span><span>${icon('cards')} ${project.cards.length} of 8 unique paper keys</span></div></section>
+  <section class="deck-panel panel"><div class="deck-header"><div><p class="eyebrow">04 / SOMETHING TO HOLD</p><h2>Your paper keys</h2><p>These are real ArUco markers. Print them clearly and keep their borders intact.</p></div><div><button class="button quiet" data-action="add-card" ${project.cards.length >= 8 ? 'disabled' : ''}>${icon('plus')} Add card</button><button class="button outline" data-action="print">${icon('print')} Print cards</button></div></div><div class="card-deck" data-testid="card-deck">${project.cards.map((card, cardIndex) => `<article class="paper-card" style="--card-color:${h(card.color)}"><div class="card-top"><label class="card-color" title="Card color"><input type="color" aria-label="Card ${card.id} color" data-card-id="${card.id}" data-card-field="color" value="${h(card.color)}"></label><span>CARD ${String(card.id).padStart(2, '0')}</span><button class="icon-button remove-button" data-action="remove-card" data-id="${card.id}" aria-label="Remove card ${h(card.label)}" ${project.cards.length <= 3 ? 'disabled' : ''}>${icon('close')}</button></div><div class="printed-marker" role="img" aria-label="ArUco marker ${card.id}">${markerSvg(card.id)}</div><label class="sr-only" for="card-label-${card.id}">Card ${card.id} label</label><input id="card-label-${card.id}" aria-label="Card ${card.id} label" data-card-id="${card.id}" data-card-field="label" value="${h(card.label)}" maxlength="32"><div class="card-bottom"><span>↑ THIS WAY UP</span><span>KEY ${String(cardIndex + 1).padStart(2, '0')}</span></div></article>`).join('')}</div><div class="deck-notes"><span>${icon('print')} Start with the print sheet’s size guide.</span><span>${icon('eye')} Bright, even light helps the camera see the cards.</span><span>${icon('cards')} ${project.cards.length} of 8 unique paper keys</span></div></section>
   <footer class="site-footer"><span><i>✦</i> Imagination, with something to hold.</span><span>MIT © ufodia <a href="https://github.com/ufodia/paper-portal" target="_blank" rel="noopener noreferrer">View source ↗</a></span></footer></main>
   <input id="project-file" type="file" accept="application/json,.json" aria-label="Import project" hidden><dialog id="player-dialog" aria-labelledby="player-dialog-title"><div class="player-dialog-header"><div><span class="eyebrow">LIVE PLAYER</span><h2 id="player-dialog-title">${h(project.name)}</h2></div><button class="button outline" data-action="close-player">${icon('close')} Close player</button></div>${playerHtml ? '<iframe id="puzzle-player" data-testid="player-frame" title="Paper Portal puzzle player" allow="camera; autoplay" sandbox="allow-scripts allow-same-origin"></iframe>' : ''}</dialog>`;
   bindEvents();
+  restoreFocus();
   if (playerHtml) {
     const frame = document.getElementById('puzzle-player') as HTMLIFrameElement;
     frame.srcdoc = playerHtml;
@@ -362,7 +463,14 @@ function bindEvents(): void {
       }
       render();
     } catch (error) {
-      tell(error instanceof SyntaxError ? 'This is not valid Paper Portal project JSON. Choose a JSON file exported in the documented format.' : error instanceof Error ? error.message : 'That edit could not be completed.', 'error');
+      tell(
+        error instanceof SyntaxError
+          ? 'This is not valid Paper Portal project JSON. Choose a JSON file exported in the documented format.'
+          : error instanceof Error
+            ? error.message
+            : 'That edit could not be completed.',
+        'error',
+      );
       render();
     }
   };
@@ -424,7 +532,14 @@ function bindEvents(): void {
       } else return;
       render();
     } catch (error) {
-      tell(error instanceof SyntaxError ? 'This is not valid Paper Portal project JSON. Choose a JSON file exported in the documented format.' : error instanceof Error ? error.message : 'Check the entered value.', 'error');
+      tell(
+        error instanceof SyntaxError
+          ? 'This is not valid Paper Portal project JSON. Choose a JSON file exported in the documented format.'
+          : error instanceof Error
+            ? error.message
+            : 'Check the entered value.',
+        'error',
+      );
       render();
     }
   };
@@ -450,7 +565,14 @@ function bindEvents(): void {
         render();
       })
       .catch((error) => {
-        tell(error instanceof SyntaxError ? 'This is not valid Paper Portal project JSON. Choose a JSON file exported in the documented format.' : error instanceof Error ? error.message : 'Could not read that project.', 'error');
+        tell(
+          error instanceof SyntaxError
+            ? 'This is not valid Paper Portal project JSON. Choose a JSON file exported in the documented format.'
+            : error instanceof Error
+              ? error.message
+              : 'Could not read that project.',
+          'error',
+        );
         render();
       });
   });
