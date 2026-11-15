@@ -77,7 +77,7 @@ summary:focus-visible {
 }
 .brand > span:last-child > span {
   font-weight: 350;
-  color: #7e6b9e;
+  color: #6f5b90;
 }
 .brand sup {
   font-size: 17px;
@@ -121,7 +121,7 @@ summary:focus-visible {
 }
 .header-caption {
   font: 10px var(--mono);
-  color: #a297b0;
+  color: #706879;
   letter-spacing: 1.2px;
   padding-left: 22px;
   border-left: 1px solid var(--line);
@@ -151,7 +151,7 @@ summary:focus-visible {
     border-color 0.15s;
 }
 .button.quiet {
-  color: #7e6e95;
+  color: #75668b;
 }
 .button.quiet:hover:not(:disabled) {
   background: #ebe5f4;
@@ -214,7 +214,7 @@ main {
   font: 10px/1.6 var(--mono);
   letter-spacing: 1.5px;
   margin: 0 0 11px;
-  color: #9b8bad;
+  color: #736780;
   display: flex;
   align-items: center;
   gap: 7px;
@@ -249,13 +249,13 @@ main {
 .intro-note > span {
   font: 10px var(--mono);
   letter-spacing: 0.7px;
-  color: #a58fb7;
+  color: #756682;
   padding-right: 15px;
 }
 .intro-note > p {
   font-size: 17px !important;
   font-weight: 400;
-  color: #9d87ad !important;
+  color: #766582 !important;
   line-height: 1.6 !important;
 }
 .project-strip {
@@ -291,7 +291,7 @@ main {
   font-weight: 600;
 }
 .project-description input {
-  color: #8b779d;
+  color: #71607f;
   font-size: 13px;
 }
 .hold-setting {
@@ -351,7 +351,7 @@ input[type='number']::-webkit-outer-spin-button {
 }
 .local-pill {
   font: 9px var(--mono);
-  color: #ac9ab8;
+  color: #73677b;
   letter-spacing: 0.8px;
   margin-left: auto;
   white-space: nowrap;
@@ -390,7 +390,7 @@ input[type='number']::-webkit-outer-spin-button {
 }
 .count-pill {
   font: 10px var(--mono);
-  color: #a48cb4;
+  color: #746380;
   background: #f1ebf8;
   border: 1px solid #e4d8ef;
   padding: 5px 6px;
@@ -436,12 +436,12 @@ input[type='number']::-webkit-outer-spin-button {
 }
 .stage-number {
   font: 11px var(--mono);
-  color: #b29ec1;
+  color: #796b83;
   border-right: 1px solid #e4d8ef;
   padding-right: 9px;
 }
 .stage-item.selected .stage-number {
-  color: #8966ac;
+  color: #7b5c9b;
   border-color: #d5bfe7;
 }
 .stage-select > span:nth-child(2) {
@@ -516,7 +516,7 @@ input[type='number']::-webkit-outer-spin-button {
   padding: 11px 7px;
   min-height: 39px;
   background: transparent;
-  color: #a58bb6;
+  color: #7f6b8c;
   width: 100%;
   font-size: 12px;
   margin-top: 13px;
@@ -678,7 +678,7 @@ input[type='number']::-webkit-outer-spin-button {
 .success-preview > span {
   font: 9px var(--mono);
   letter-spacing: 1px;
-  color: #b4a1c0;
+  color: #7a6d83;
   margin-top: 5px;
 }
 .success-preview > p {
@@ -711,7 +711,7 @@ input[type='number']::-webkit-outer-spin-button {
 }
 .selected-index {
   font: 24px var(--mono);
-  color: #d1bfdc;
+  color: #796f80;
 }
 .stacked-fields {
   display: flex;
@@ -1017,7 +1017,7 @@ select {
   gap: 18px;
 }
 .site-footer a {
-  color: #9675a6;
+  color: #7e628b;
   text-decoration: none;
 }
 .site-footer a:hover {
@@ -1124,7 +1124,7 @@ select,
 .preview-badge,
 .rule-cards legend,
 .deck-header .eyebrow {
-  color: #8c739f;
+  color: #816a92;
 }
 .panel-description,
 .journey-footnote p,
@@ -1140,7 +1140,7 @@ select,
 .success-preview > p,
 .site-footer,
 .site-footer > span:last-child {
-  color: #8a729a;
+  color: #776284;
 }
 .local-pill {
   font-size: 10px;
@@ -1163,13 +1163,13 @@ select,
   color: #987aa7;
 }
 .hold-setting span {
-  color: #9677a7;
+  color: #775e84;
 }
 .story-copy p {
   font-size: 14px;
 }
 .intro > div > p:last-child {
-  color: #8a749a;
+  color: #786586;
 }
 
 @media (min-width: 1550px) {
@@ -1825,7 +1825,7 @@ select,
 .deck-notes > span,
 .site-footer,
 .site-footer > span:last-child {
-  color: #7e658e;
+  color: #765f85;
 }
 .stacked-fields > label,
 .rule-type-label,
@@ -1850,7 +1850,7 @@ select,
 }
 .rule-hold {
   font-size: 12px;
-  color: #8a6d9c;
+  color: #7b618b;
 }
 .project-strip label {
   font-size: 11px;
