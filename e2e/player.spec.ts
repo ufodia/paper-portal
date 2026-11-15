@@ -111,7 +111,9 @@ test('synthetic camera frames pass through real marker detection and tracks stop
   browser,
 }, info) => {
   await page.goto('/');
-  const marker = await page.evaluate(async () => (await import('/src/markers.ts')).markerSvg(1));
+  const marker = await page
+    .getByRole('img', { name: 'ARUCO marker 1', exact: true })
+    .evaluate((svg) => svg.outerHTML);
   const game = await downloadGame(page, info);
   const context = await browser.newContext({ offline: true });
   try {
@@ -177,7 +179,7 @@ test('synthetic camera frames pass through real marker detection and tracks stop
             .cameraConstraints.audio,
       ),
     ).toBe(false);
-    await player.screenshot({ path: 'docs/assets/player.png', fullPage: true });
+    await player.screenshot({ path: info.outputPath('player.png'), fullPage: true });
     await player.getByRole('button', { name: 'Stop camera', exact: true }).click();
     await expect
       .poll(() =>

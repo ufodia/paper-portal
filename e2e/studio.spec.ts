@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 
 test('authored changes save, reopen, print real cards, and launch the embedded player', async ({
   page,
-}) => {
+}, info) => {
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
   await page.setViewportSize({ width: 1440, height: 1050 });
@@ -26,13 +26,11 @@ test('authored changes save, reopen, print real cards, and launch the embedded p
   expect(project.stages[0].title).toBe('Open the hatch');
   expect(project.holdMs).toBe(800);
   await page.getByRole('button', { name: 'Load sample', exact: true }).click();
-  await page
-    .getByLabel('Import project', { exact: true })
-    .setInputFiles({
-      name: 'saved.paper-portal.json',
-      mimeType: 'application/json',
-      buffer: Buffer.from(json),
-    });
+  await page.getByLabel('Import project', { exact: true }).setInputFiles({
+    name: 'saved.paper-portal.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(json),
+  });
   await expect(page.getByLabel('Project name', { exact: true })).toHaveValue('Paper laboratory');
   await expect(page.getByLabel('Card 0 label', { exact: true })).toHaveValue('Signal');
   await expect(page.getByTestId('stage-preview')).toContainText('Open the hatch');
@@ -55,7 +53,7 @@ test('authored changes save, reopen, print real cards, and launch the embedded p
   await page.getByRole('button', { name: 'Close player', exact: true }).click();
   await expect(page.getByTestId('player-frame')).toHaveCount(0);
   await page.getByRole('button', { name: 'Load sample', exact: true }).click();
-  await page.screenshot({ path: 'docs/assets/workspace.png', fullPage: true });
+  await page.screenshot({ path: info.outputPath('workspace.png'), fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
     true,
