@@ -98,6 +98,30 @@ test('keyboard rule edits keep focus, modal close returns focus, and narrow layo
   await expect(page.getByRole('img', { name: 'ArUco marker 0', exact: true })).toBeVisible();
 });
 
+for (const viewport of [
+  { width: 640, height: 512 },
+  { width: 320, height: 256 },
+]) {
+  test(`Tab after editing keeps the next control fully visible at ${viewport.width}x${viewport.height}`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(viewport);
+    await page.goto('/');
+    const setting = page.getByLabel('Hold duration in milliseconds', { exact: true });
+    for (let step = 0; step < 20; step++) {
+      await page.keyboard.press('Tab');
+      if (await setting.evaluate((element) => document.activeElement === element)) break;
+    }
+    await expect(setting).toBeFocused();
+    await page.keyboard.press('Control+A');
+    await page.keyboard.type('900');
+    await page.keyboard.press('Tab');
+    const next = page.locator('.stage-select').first();
+    await expect(next).toBeFocused();
+    await expect(next).toBeInViewport({ ratio: 1 });
+  });
+}
+
 test('backward keyboard navigation reaches the unkeyed support link after a name edit', async ({
   page,
 }) => {

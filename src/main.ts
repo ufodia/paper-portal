@@ -238,7 +238,7 @@ function retainFocus(): () => void {
         return;
       }
       deferredFocus = null;
-      replacement.focus({ preventScroll: true });
+      replacement.focus({ preventScroll: !tabbing });
       if (
         !tabbing &&
         start !== null &&
