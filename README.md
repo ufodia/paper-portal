@@ -88,6 +88,8 @@ npm run test:e2e
 
 If Paper Portal helps you run a class activity, build an escape puzzle or share an evening's game, you can [buy ufodia a coffee](https://buymeacoffee.com/ufodia). Support is voluntary and helps maintain the detector integration, tests and authoring tools. The same source and features remain available to everyone.
 
+You can also support this work through [GitHub Sponsors](https://github.com/sponsors/ufodia).
+
 For contributions, start with [CONTRIBUTING.md](CONTRIBUTING.md). Use [SECURITY.md](SECURITY.md) for sensitive findings.
 
 ## License and credits
